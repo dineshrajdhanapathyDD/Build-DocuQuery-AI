@@ -32,6 +32,7 @@ private study PDFs, whitepapers, service guides, and notes stored in S3.
 │   └── builder_center_draft.md # AWS Builder Center project description draft
 ├── requirements.txt
 ├── .env.example
+├── LICENSE                     # MIT License
 └── pytest.ini
 ```
 
@@ -185,9 +186,71 @@ the AWS provider chain locally - the same code works in both places
 
 ## Architecture
 
-See [`docs/architecture.md`](docs/architecture.md) for the Mermaid diagram and a
-request-flow description, and [`docs/architecture.drawio`](docs/architecture.drawio)
-to open/edit the diagram in [diagrams.net](https://app.diagrams.net).
+![DocuQuery AI architecture - one new tool, read_s3_document, Before vs After](docs/architecture.png)
+
+> The PNG above is exported from [`docs/architecture.drawio`](docs/architecture.drawio).
+> To regenerate it, open the `.drawio` file at [diagrams.net](https://app.diagrams.net)
+> and use **File -> Export as -> PNG** (save to `docs/architecture.png`).
+> Until the PNG is exported, the GitHub-rendered diagram below shows the same flow.
+
+```mermaid
+flowchart LR
+    User([User]) -->|question + chosen document| UI[Streamlit app<br/>Before/After toggle]
+    UI -->|invoke agent| Agent[Strands Agent<br/>Amazon Bedrock - Nova Pro]
+    Agent -. no tool: general knowledge only .-> Before[BEFORE agent<br/>cannot reach S3]
+    Agent -->|when a document is needed| Tool[read_s3_document tool]
+    Tool -->|title to key| Allow[["Allow-list<br/>config.py"]]
+    Allow -->|permitted key only| Reader[read_document<br/>s3_reader.py]
+    Reader -->|head_object / get_object| S3[(Amazon S3 study-docs/<br/>aws-saa-handbook.pdf<br/>saa-personal-notes.pdf)]
+    Reader -->|text + pages + metadata| Tool
+    Tool -->|JSON result| Agent
+    Agent -->|answer: evidence vs general| UI
+    IAM[/AWS IAM least privilege/] -. governs access .-> Reader
+
+    classDef aws fill:#ff9900,stroke:#232f3e,color:#232f3e;
+    classDef guard fill:#e8f0fe,stroke:#1a73e8,color:#1a3d8f;
+    class S3,Agent aws;
+    class Allow guard;
+```
+
+**Request flow (AFTER / enhanced agent):**
+
+1. The user picks a document (from the allow-list) and asks a question in the
+   **Streamlit** UI (hosted on Streamlit Community Cloud).
+2. The **Strands** agent, backed by **Amazon Bedrock - Nova Pro**
+   (`amazon.nova-pro-v1:0`), decides whether the question needs a document.
+3. It calls the one new tool, **`read_s3_document`**, with the document
+   **title** (never a raw bucket or key).
+4. The **allow-list** in `docuquery/config.py` maps the title to a permitted S3
+   key; anything not in the catalog is rejected before any AWS call.
+5. `read_document` (in `docuquery/s3_reader.py`) runs the allow-list check, a
+   `head_object` size check, type/empty validation, **pypdf** extraction with
+   `[page N]` markers, and truncation - returning a typed `DocumentResult`.
+6. It reads the object from **Amazon S3** (`study-docs/` prefix:
+   `aws-saa-handbook.pdf`, `saa-personal-notes.pdf`) via `get_object`.
+7. The agent answers, labeling **document evidence vs general AWS knowledge**;
+   the UI shows a source panel with document name, key, and page count.
+8. **BEFORE** mode has no tool, so it never reaches S3 - the contrast the demo
+   depends on. **AWS IAM** (least privilege) governs the reader: read
+   `study-docs/*` + `bedrock:InvokeModel*` on one model, with no hardcoded
+   credentials (boto3 provider chain).
+
+The same diagram is also available as a GitHub-rendered Mermaid chart and a
+longer request-flow write-up in [`docs/architecture.md`](docs/architecture.md),
+with the editable source in [`docs/architecture.drawio`](docs/architecture.drawio).
+
+### Technology stack
+
+| Layer | Technology |
+| --- | --- |
+| Agent framework | Strands Agents SDK (`@tool` `read_s3_document`) |
+| Reasoning model | Amazon Bedrock - Nova Pro (`amazon.nova-pro-v1:0`) |
+| Storage | Amazon S3 (`study-docs/` prefix) |
+| AWS SDK | boto3 / botocore |
+| PDF parsing | pypdf |
+| UI / hosting | Streamlit / Streamlit Community Cloud |
+| Identity & access | AWS IAM (least-privilege) |
+| Runtime / tests | Python 3.12 / pytest (12 mocked tests) |
 
 ## Security notes
 
@@ -195,6 +258,17 @@ to open/edit the diagram in [diagrams.net](https://app.diagrams.net).
 - Least-privilege IAM scoped to one prefix.
 - No secrets in the repo; `.env` is git-ignored and `.env.example` has none.
 - Type/size/empty validation before and after download; output length capped.
+
+## License
+
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE)
+file for the full text. In short: you may use, copy, modify, and distribute the
+code freely, with attribution and no warranty.
+
+Note: study documents under `study-docs/` (and any PDFs in `sample_docs/`) are
+**not** covered by this license - they are your own content, are git-ignored,
+and are never committed to this repository. Only use study material you have the
+right to store and process.
 
 ## Deliverables checklist
 
@@ -208,4 +282,5 @@ to open/edit the diagram in [diagrams.net](https://app.diagrams.net).
 - [x] Unit tests (mocked) - 12 passing
 - [x] Two-minute demo script (`docs/demo_script.md`)
 - [x] AWS Builder Center project description draft (`docs/builder_center_draft.md`)
+- [x] Open-source license (`LICENSE` - MIT)
 ```
