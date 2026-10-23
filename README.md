@@ -186,7 +186,8 @@ the AWS provider chain locally - the same code works in both places
 
 ## Architecture
 
-![DocuQuery AI architecture - one new tool, read_s3_document, Before vs After](docs/architecture.png)
+<img width="1102" height="695" alt="docquery drawio (1)" src="https://github.com/user-attachments/assets/b492b01f-1521-4daf-bb04-369b660cd2d1" />
+
 
 > The PNG above is exported from [`docs/architecture.drawio`](docs/architecture.drawio).
 > To regenerate it, open the `.drawio` file at [diagrams.net](https://app.diagrams.net)
