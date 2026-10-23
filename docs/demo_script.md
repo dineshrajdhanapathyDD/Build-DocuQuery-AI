@@ -119,10 +119,73 @@ visible.
 
 ---
 
+## Sample questions (matched to the SAA-C03 Handbook)
+
+The document `study-docs/aws-saa-handbook.pdf` ("AWS Solutions Architect
+Associate (SAA-C03) Handbook", 299 pages) contains exact service limits and
+"Exam Tips" lines. The strongest demo questions target a **specific number or
+exam-tip phrase** from the handbook: the After agent can cite it with a page
+reference, while the Before agent can only give a general or hedged answer.
+
+Frame each question with **"according to my SAA-C03 handbook / from my notes"**
+so the answer is expected to come from that document.
+
+### Hero question (crisp numbers, best single before/after)
+
+> According to my SAA-C03 handbook, what are the exact read and write throughput
+> limits of a single Kinesis Data Streams shard? Cite the page.
+
+- **Before:** vague or ballpark answer, no source, may state limits incorrectly.
+- **After:** *"Each shard: 1 MB/s write, 2 MB/s read"* with `[page 22]`, read
+  from the handbook via `read_s3_document`.
+
+### Backup questions (exact facts from the handbook)
+
+> From my handbook, what is the transactions-per-second limit for an SQS FIFO
+> queue, and how can it be increased?
+
+- **After:** *"Up to 300 TPS, can increase with batching"* `[page 54]`.
+
+> In my SAA-C03 handbook, how many ways is Aurora storage replicated, across how
+> many Availability Zones, and how long does failover take?
+
+- **After:** *"Six-way replication across three AZs; failover typically under 30
+  seconds"* `[pages 96/99]`.
+
+### Exam-tip recall (the "wow" question)
+
+> My handbook has an exam tip on the difference between a DynamoDB LSI and a GSI.
+> What does it say?
+
+- **After:** *"LSI must be defined at creation; GSI can be added anytime"*
+  `[page 104]` - quotes the handbook's own Exam Tips line almost verbatim.
+
+### Guardrail / honesty question (proves grounding)
+
+> What does my SAA-C03 handbook say about Amazon Bedrock pricing tiers?
+
+- **After:** Bedrock is not covered in this handbook, so the agent reads the
+  document and honestly reports there is no such content - instead of answering
+  from general knowledge. This shows the answer is grounded in the document.
+
+### Recommended 2-question flow for the video (handbook)
+
+1. Ask the **hero** Kinesis-shard question in both modes -> Before is vague,
+   After cites "1 MB/s write, 2 MB/s read `[page 22]`."
+2. Ask the **exam-tip** LSI-vs-GSI question in After mode -> it quotes the
+   handbook's own Exam Tips line with a page number. That is the whole story.
+
+---
+
 ## Pre-recording checklist
 
 - [ ] `.env` created from `.env.example` with a real `DOCUQUERY_BUCKET`.
-- [ ] Sample PDF uploaded: `python scripts/make_sample_pdf.py --upload`.
-- [ ] Bedrock model access enabled for `BEDROCK_MODEL_ID` in your region.
+- [ ] Both catalog documents exist in S3 under `study-docs/`:
+      `saa-personal-notes.pdf` and `aws-saa-handbook.pdf`.
+- [ ] The document selector lists both docs (it only shows readable files).
+- [ ] Bedrock model access enabled for `BEDROCK_MODEL_ID` (amazon.nova-pro-v1:0)
+      in your region.
 - [ ] AWS credentials available via role/profile (no keys on screen).
 - [ ] `streamlit run app.py` works and both modes respond.
+- [ ] (If demoing the deployed app) Streamlit Cloud Secrets match the current
+      local `.streamlit/secrets.toml`, then reboot the app.
