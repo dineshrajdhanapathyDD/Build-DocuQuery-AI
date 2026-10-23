@@ -61,16 +61,31 @@ provider chain is used), and the IAM policy grants read access only to the
 
 ## (c) The new behavior the tool unlocked
 
-**Before:** ask *"According to my SAA-C03 handbook, what are the exact
-throughput limits of a single Kinesis Data Streams shard?"* and the agent gives
-a vague, uncited answer - it has no way to open my document.
+**Question (identical in both modes):** *"According to my SAA-C03 handbook,
+which AWS service allows you to run code without provisioning or managing
+servers?"*
 
-**After:** the same agent, same question - it recognizes the question depends on
+**Before** - the base agent has no way to open my document, so it answers from
+general knowledge only, with no citation:
+
+> AWS Lambda allows you to run code without provisioning or managing servers.
+> You can write and upload your code as a function, and Lambda takes care of
+> everything required to run and scale your code with high availability.
+
+**After** - the same agent, same question. It recognizes the question depends on
 a document, calls `read_s3_document`, pulls the handbook from S3, and answers
-*"1 MB/s write, 2 MB/s read per shard"* **with a page citation (`[page 22]`)**.
-It labels what came **from the document** separately from **general AWS
-knowledge**, and when a document doesn't contain the answer it says so instead
-of inventing one.
+while clearly separating document evidence from general knowledge:
+
+> From the document:
+> The service that allows you to run code without provisioning or managing
+> servers is AWS Lambda [page 275].
+>
+> General AWS knowledge:
+> AWS Lambda is a serverless compute service that lets you run code in response
+> to events and automatically manages the underlying compute resources.
+
+The page citation points to the handbook's AWS Lambda section, and when a
+document doesn't contain the answer the agent says so instead of inventing one.
 
 I verified this live against a real AWS account (see "Troubleshooting" and the
 repo's `docs/live_demo_results.md`), and in a self-correcting moment the model
@@ -151,6 +166,11 @@ IAM (`study-docs/*` read + Bedrock invoke on one model).
 
 ## Troubleshooting (things that actually bit me)
 
+Every issue below is resolved - the project now runs end to end: 12 mocked
+tests pass, the local Streamlit app and terminal demo work, and the deployed
+Streamlit Community Cloud app works once its Secrets match the current
+credentials.
+
 - **Model access: Claude denied, Nova Pro worked.** My first model choice
   returned `AccessDenied` from Bedrock in this account. I probed model
   availability and switched to `amazon.nova-pro-v1:0`, which is enabled and
@@ -164,8 +184,9 @@ IAM (`study-docs/*` read + Bedrock invoke on one model).
   exact same code worked locally. Root cause: **Streamlit Cloud never reads the
   repo's `.env`** - it only uses the Secrets pasted into its dashboard, which
   were stale. Fix: paste the current credentials into the Cloud Secrets panel and
-  reboot. I confirmed the credentials themselves were valid by testing `converse`
-  and `converse_stream` directly from a clean process.
+  reboot. I confirmed the credentials were valid by testing `converse` and
+  `converse_stream` directly from a clean process, and after refreshing the Cloud
+  Secrets the deployed app works - the issue was secret delivery, not the code.
 - **Copyright hygiene.** My first sample PDF was a copyrighted slide deck marked
   "not for distribution." I removed it from both S3 and local disk and replaced
   it with a non-copyrighted SAA-C03 handbook, keeping the public repo clean. All
@@ -236,9 +257,9 @@ synthesis, and per-user allow-lists - but the core lesson stands: **pick the one
 tool that changes what the agent can honestly claim to know, and build it as a
 boundary, not just a feature.**
 
-## Honest scope note
+> ## Honest scope note
 
-The mocked unit tests run offline and pass (12 passed). The live Amazon S3 +
-Amazon Bedrock path is exercised via `demo_before_after.py` and the Streamlit
-app, and requires real AWS credentials, Bedrock model access, and a bucket
-containing the documents. Mocked and live testing are kept clearly separate.
+> The mocked unit tests run offline and pass (12 passed). The live Amazon S3 +
+> Amazon Bedrock path is exercised via `demo_before_after.py` and the Streamlit
+> app, and requires real AWS credentials, Bedrock model access, and a bucket
+> containing the documents. Mocked and live testing are kept clearly separate.
