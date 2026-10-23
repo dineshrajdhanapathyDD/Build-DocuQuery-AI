@@ -157,8 +157,8 @@ so the answer is expected to come from that document.
 > My handbook has an exam tip on the difference between a DynamoDB LSI and a GSI.
 > What does it say?
 
-- **After:** *"LSI must be defined at creation; GSI can be added anytime"*
-  `[page 104]` - quotes the handbook's own Exam Tips line almost verbatim.
+- **After:** *"LSI = must be defined at creation, GSI = can be added anytime"*
+  `[page 105]` - quotes the handbook's own Exam Tips line verbatim.
 
 ### Guardrail / honesty question (proves grounding)
 

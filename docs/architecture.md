@@ -6,7 +6,7 @@
 flowchart TD
     User([User]) -->|question + chosen document| UI[Streamlit app<br/>app.py]
 
-    UI -->|invokes| Agent[Strands Agent<br/>Amazon Bedrock model]
+    UI -->|invokes| Agent[Strands Agent<br/>Amazon Bedrock - Nova Pro]
 
     subgraph Enhanced["Enhanced agent (AFTER)"]
         Agent -->|decides a document is needed| Tool["read_s3_document tool<br/>docuquery/tools.py"]
@@ -14,7 +14,7 @@ flowchart TD
         Allowlist -->|permitted key only| Reader[read_document<br/>docuquery/s3_reader.py]
     end
 
-    Reader -->|head_object / get_object<br/>configured bucket + region| S3[(Amazon S3<br/>study-docs/ prefix)]
+    Reader -->|head_object / get_object<br/>configured bucket + region| S3[(Amazon S3 study-docs/<br/>aws-saa-handbook.pdf<br/>saa-personal-notes.pdf)]
     Reader -->|pypdf text extraction<br/>type/size/empty checks| Reader
     Reader -->|text + page markers + metadata| Tool
     Tool -->|JSON result| Agent
@@ -53,4 +53,28 @@ flowchart TD
 - **No hardcoded credentials** - boto3's standard provider chain (IAM role,
   profile, env vars, SSO) supplies credentials.
 - **Least privilege IAM** - read only the `study-docs/*` prefix plus Bedrock
-  invoke (see `docs/iam-policy.json`).
+  invoke on one model (see `docs/iam-policy.json`).
+
+## Technology stack
+
+- **Strands Agents SDK** - agent loop + the `@tool` `read_s3_document`.
+- **Amazon Bedrock - Nova Pro** (`amazon.nova-pro-v1:0`) - reasoning model.
+- **Amazon S3 + boto3** - private document storage and retrieval.
+- **pypdf** - PDF text extraction with `[page N]` markers.
+- **Streamlit** (hosted on Streamlit Community Cloud) - the Before/After UI.
+- **AWS IAM** - least-privilege scoped access.
+- **Python 3.12**, **pytest** (12 mocked unit tests).
+
+## Pricing (demo scale)
+
+- **Bedrock / Nova Pro** - pay per 1K input/output tokens; a question is a few
+  thousand tokens, so cents-per-interaction with no idle cost.
+- **Amazon S3** - a few small PDFs (<1 GB) plus HEAD/GET per question;
+  effectively negligible.
+- **IAM** - free. **Streamlit Community Cloud** - free tier.
+- No standing/idle charges; both Bedrock and S3 are pay-per-use.
+
+## Editable diagram
+
+An editable draw.io version of this architecture is at
+`docs/architecture.drawio` (open at app.diagrams.net).
