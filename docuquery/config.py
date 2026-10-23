@@ -153,3 +153,42 @@ def key_for_title(title: str) -> str | None:
 def is_permitted_key(key: str) -> bool:
     """True only if `key` is one of the application-controlled catalog keys."""
     return any(e.key == key for e in catalog())
+
+
+def available_documents(settings: "Settings | None" = None, s3_client=None) -> List[str]:
+    """Return titles of catalog documents that actually exist and are usable.
+
+    A document is "available" only when its S3 object exists, is within the
+    size limit, and has a supported file extension. This lets the UI list just
+    the working files instead of every catalog entry, so a user can never pick
+    a document that will fail on read.
+
+    Uses a cheap HEAD request per object (no download). If the bucket is not
+    configured or S3 cannot be reached, returns an empty list rather than
+    raising, so the UI can degrade gracefully.
+    """
+    settings = settings or globals()["settings"]
+    if not settings.bucket:
+        return []
+
+    # Local import to avoid a module-level boto3 dependency for non-UI callers.
+    import boto3
+    from botocore.exceptions import BotoCoreError, ClientError
+
+    client = s3_client or boto3.client("s3", region_name=settings.aws_region)
+    allowed_exts = (".pdf", ".txt", ".md")
+    out: List[str] = []
+    for e in catalog():
+        dot = e.key.rfind(".")
+        ext = e.key[dot:].lower() if dot != -1 else ""
+        if ext not in allowed_exts:
+            continue
+        try:
+            head = client.head_object(Bucket=settings.bucket, Key=e.key)
+        except (ClientError, BotoCoreError):
+            # Missing object, access denied, or transient error -> not available.
+            continue
+        size = int(head.get("ContentLength", 0))
+        if 0 < size <= settings.max_bytes:
+            out.append(e.title)
+    return out

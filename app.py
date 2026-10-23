@@ -61,7 +61,24 @@ col_q, col_src = st.columns([3, 2])
 
 with col_q:
     st.subheader("1. Choose a document")
-    selected_title = st.selectbox("Available documents", options=config.titles())
+
+    @st.cache_data(ttl=300, show_spinner=False)
+    def _available_titles() -> list[str]:
+        """Titles of catalog docs that truly exist/readable in S3 (cached)."""
+        try:
+            return config.available_documents()
+        except Exception:  # noqa: BLE001 - never let discovery break the UI
+            return []
+
+    doc_titles = _available_titles() if config.settings.bucket else []
+    if doc_titles:
+        selected_title = st.selectbox("Available documents", options=doc_titles)
+    else:
+        selected_title = None
+        st.warning(
+            "No readable documents found in the configured bucket. "
+            "Check your AWS credentials and that the documents exist in S3."
+        )
 
     st.subheader("2. Ask a question")
     question = st.text_area(
@@ -90,6 +107,8 @@ if ask:
         st.error("Please enter a question.")
     elif not config.settings.bucket:
         st.error("No bucket configured. Set DOCUQUERY_BUCKET in your .env file.")
+    elif mode.startswith("After") and not selected_title:
+        st.error("No readable document is available to query. Fix S3 access first.")
     else:
         st.subheader("Answer")
         with st.spinner("Thinking..."):
