@@ -82,7 +82,7 @@ class Settings:
             "BEDROCK_MODEL_ID", "us.anthropic.claude-sonnet-4-20250514-v1:0"
         )
     )
-    max_mb: int = field(default_factory=lambda: int(os.getenv("DOCUQUERY_MAX_MB", "10")))
+    max_mb: int = field(default_factory=lambda: int(os.getenv("DOCUQUERY_MAX_MB", "50")))
     max_chars: int = field(
         default_factory=lambda: int(os.getenv("DOCUQUERY_MAX_CHARS", "12000"))
     )
