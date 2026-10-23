@@ -1,0 +1,9 @@
+# Non-secret Streamlit configuration (safe to commit).
+[server]
+headless = true
+
+[browser]
+gatherUsageStats = false
+
+[theme]
+base = "light"

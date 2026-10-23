@@ -1,0 +1,39 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ReadStudyDocumentsPrefixOnly",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject"
+      ],
+      "Resource": "arn:aws:s3:::docuquery-ai-study-466742534146-us-east-1/study-docs/*"
+    },
+    {
+      "Sid": "ListOnlyStudyPrefix",
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListBucket"
+      ],
+      "Resource": "arn:aws:s3:::docuquery-ai-study-466742534146-us-east-1",
+      "Condition": {
+        "StringLike": {
+          "s3:prefix": [
+            "study-docs/*"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "InvokeNovaModelOnly",
+      "Effect": "Allow",
+      "Action": [
+        "bedrock:InvokeModel",
+        "bedrock:InvokeModelWithResponseStream"
+      ],
+      "Resource": [
+        "arn:aws:bedrock:us-east-1::foundation-model/amazon.nova-pro-v1:0"
+      ]
+    }
+  ]
+}

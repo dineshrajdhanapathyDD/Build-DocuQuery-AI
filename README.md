@@ -153,6 +153,36 @@ encrypted PDFs, and the tool wrapper.
   credentials, model access, and an uploaded document. No live-integration
   success is claimed here beyond what you verify in your own account.
 
+## Deploy to Streamlit Community Cloud
+
+The app runs on [Streamlit Community Cloud](https://share.streamlit.io) straight
+from this public GitHub repo. The main file is **`app.py`**.
+
+> Public-repo security note: Streamlit Cloud has no IAM role, so it needs AWS
+> **access keys** in its Secrets store. Do **not** use an admin user. Create a
+> dedicated, least-privilege IAM user with the policy in
+> [`docs/iam-cloud-user-policy.json`](docs/iam-cloud-user-policy.json) and use
+> that user's keys. Rotate and delete them when the demo is done.
+
+Steps:
+
+1. Create the dedicated IAM user (console or CLI) and attach
+   `docs/iam-cloud-user-policy.json`. Generate an access key for it.
+2. Go to <https://share.streamlit.io> -> **New app** -> pick this repo, branch
+   `main`, main file **`app.py`**.
+3. Open **Advanced settings -> Secrets** and paste the contents of
+   [`.streamlit/secrets.toml.example`](.streamlit/secrets.toml.example),
+   replacing the placeholder keys with your dedicated IAM user's credentials.
+4. Deploy. Streamlit installs `requirements.txt` and uses the Python version in
+   `.python-version` (3.12).
+
+Config and credentials are read via `st.secrets` on Cloud and via `.env` /
+the AWS provider chain locally - the same code works in both places
+(see `docuquery/config.py`).
+
+**App entry point for the submission field:**
+`https://github.com/dineshrajdhanapathyDD/Build-DocuQuery-AI/blob/main/app.py`
+
 ## Architecture
 
 See [`docs/architecture.md`](docs/architecture.md) for the Mermaid diagram and a

@@ -20,6 +20,49 @@ except Exception:  # pragma: no cover - dotenv is optional at runtime
     pass
 
 
+# Keys that may be supplied via Streamlit Community Cloud "Secrets" (TOML).
+# On Cloud there is no .env and no IAM role, so both configuration AND AWS
+# credentials arrive through st.secrets. We copy them into os.environ (without
+# overwriting anything already set) so the rest of this module - and boto3's
+# standard provider chain - pick them up unchanged. This import is wrapped so
+# tests and CLI usage never require Streamlit.
+_SECRET_KEYS = (
+    "AWS_REGION",
+    "AWS_ACCESS_KEY_ID",
+    "AWS_SECRET_ACCESS_KEY",
+    "AWS_SESSION_TOKEN",
+    "DOCUQUERY_BUCKET",
+    "DOCUQUERY_PREFIX",
+    "BEDROCK_MODEL_ID",
+    "DOCUQUERY_MAX_MB",
+    "DOCUQUERY_MAX_CHARS",
+)
+
+
+def _load_streamlit_secrets() -> None:
+    """Bridge st.secrets -> os.environ when running under Streamlit.
+
+    No-op if Streamlit isn't installed or no secrets file is configured.
+    Never overwrites a value already present in the environment, so a local
+    .env or real shell credentials always win.
+    """
+    try:
+        import streamlit as st  # noqa: WPS433 - optional, UI-only dependency
+    except Exception:
+        return
+    try:
+        # Accessing st.secrets with no secrets.toml raises; guard it.
+        available = dict(st.secrets)
+    except Exception:
+        return
+    for key in _SECRET_KEYS:
+        if key in available and os.environ.get(key) in (None, ""):
+            os.environ[key] = str(available[key])
+
+
+_load_streamlit_secrets()
+
+
 def _get_bool(name: str, default: bool) -> bool:
     raw = os.getenv(name)
     if raw is None:
