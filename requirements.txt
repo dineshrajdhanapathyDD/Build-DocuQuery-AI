@@ -1,0 +1,17 @@
+# Core agent framework (Strands Agents SDK)
+strands-agents>=1.10.0,<2.0.0
+
+# AWS SDK - pinned to a range compatible with strands-agents' botocore floor.
+boto3>=1.39.7,<2.0.0
+
+# PDF text extraction
+pypdf>=5.1.0,<6.0.0
+
+# Web UI
+streamlit>=1.40.0,<2.0.0
+
+# Environment variable loading
+python-dotenv>=1.0.1,<2.0.0
+
+# ---- Testing (dev) ----
+pytest>=8.3.0,<9.0.0

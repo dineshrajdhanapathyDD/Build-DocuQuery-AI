@@ -1,0 +1,76 @@
+<mxfile host="app.diagrams.net" modified="2026-10-23T00:00:00.000Z" agent="DocuQuery AI" version="24.0.0">
+  <diagram id="docuquery-arch" name="DocuQuery AI">
+    <mxGraphModel dx="1100" dy="760" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="900" pageHeight="640" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="user" value="User" style="shape=mxgraph.basic.actor;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="40" y="60" width="50" height="90" as="geometry" />
+        </mxCell>
+
+        <mxCell id="ui" value="Streamlit app&#10;(app.py)&#10;document selector, question,&#10;answer + source panel" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="160" y="60" width="200" height="90" as="geometry" />
+        </mxCell>
+
+        <mxCell id="agent" value="Strands Agent&#10;(Amazon Bedrock model)&#10;labels document evidence vs&#10;general AWS knowledge" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="420" y="60" width="210" height="90" as="geometry" />
+        </mxCell>
+
+        <mxCell id="tool" value="read_s3_document tool&#10;(docuquery/tools.py)&#10;one new tool" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="420" y="210" width="210" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="allow" value="Application allow-list&#10;(docuquery/config.py)&#10;title -&gt; permitted key&#10;fixed bucket" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="420" y="320" width="210" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="reader" value="read_document&#10;(docuquery/s3_reader.py)&#10;type/size/empty checks,&#10;pypdf extraction, truncation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="420" y="440" width="210" height="90" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s3" value="Amazon S3&#10;study-docs/ prefix&#10;(private study PDFs)" style="sketch=0;outlineConnect=0;html=1;align=center;verticalAlign=top;fillColor=#E7157B;strokeColor=none;verticalLabelPosition=bottom;labelPosition=center;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.s3;fontColor=#232F3E;" vertex="1" parent="1">
+          <mxGeometry x="720" y="450" width="78" height="78" as="geometry" />
+        </mxCell>
+
+        <mxCell id="before" value="BEFORE agent&#10;no tool -&gt; cannot reach S3&#10;general knowledge only" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;fillColor=#f5f5f5;strokeColor=#999999;" vertex="1" parent="1">
+          <mxGeometry x="690" y="60" width="180" height="90" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;" edge="1" parent="1" source="user" target="ui">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;" edge="1" parent="1" source="ui" target="agent">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" value="when a document is needed" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;fontSize=10;" edge="1" parent="1" source="agent" target="tool">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" value="title -&gt; key" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;fontSize=10;" edge="1" parent="1" source="tool" target="allow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" value="permitted key only" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;fontSize=10;" edge="1" parent="1" source="allow" target="reader">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" value="get_object (bucket+region)" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;fontSize=10;" edge="1" parent="1" source="reader" target="s3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" value="text + pages + metadata" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;fontSize=10;" edge="1" parent="1" source="reader" target="tool">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="660" y="485" />
+              <mxPoint x="660" y="245" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e8" value="answer" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;fontSize=10;" edge="1" parent="1" source="agent" target="ui">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="400" y="40" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

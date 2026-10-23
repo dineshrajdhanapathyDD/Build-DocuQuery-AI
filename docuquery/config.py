@@ -1,0 +1,107 @@
+"""Central configuration for DocuQuery AI.
+
+All security-relevant settings live here so the agent/model can never widen its
+own access. The model receives only a *list of permitted document keys*; it
+cannot name an arbitrary bucket or an unapproved object key.
+"""
+
+from __future__ import annotations
+
+import os
+from dataclasses import dataclass, field
+from typing import List
+
+try:
+    # Load a local .env if present. Safe no-op when the package isn't installed.
+    from dotenv import load_dotenv
+
+    load_dotenv()
+except Exception:  # pragma: no cover - dotenv is optional at runtime
+    pass
+
+
+def _get_bool(name: str, default: bool) -> bool:
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() in {"1", "true", "yes", "on"}
+
+
+@dataclass
+class Settings:
+    """Runtime settings, resolved from environment variables with safe defaults."""
+
+    aws_region: str = field(default_factory=lambda: os.getenv("AWS_REGION", "us-east-1"))
+    bucket: str = field(default_factory=lambda: os.getenv("DOCUQUERY_BUCKET", ""))
+    prefix: str = field(default_factory=lambda: os.getenv("DOCUQUERY_PREFIX", ""))
+    model_id: str = field(
+        default_factory=lambda: os.getenv(
+            "BEDROCK_MODEL_ID", "us.anthropic.claude-sonnet-4-20250514-v1:0"
+        )
+    )
+    max_mb: int = field(default_factory=lambda: int(os.getenv("DOCUQUERY_MAX_MB", "10")))
+    max_chars: int = field(
+        default_factory=lambda: int(os.getenv("DOCUQUERY_MAX_CHARS", "12000"))
+    )
+
+    @property
+    def max_bytes(self) -> int:
+        return self.max_mb * 1024 * 1024
+
+
+# A module-level singleton is convenient for the app; tests construct their own.
+settings = Settings()
+
+
+# ---------------------------------------------------------------------------
+# Application-controlled document catalog (the allow-list).
+#
+# This is the ONLY set of object keys the agent is permitted to read. The model
+# selects a document by its human-friendly title; the title maps to a key here.
+# Keys are validated against this catalog before any S3 call is made.
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class CatalogEntry:
+    title: str          # Shown in the UI and to the model.
+    key: str            # S3 object key (relative to bucket).
+    description: str = ""  # Optional human description.
+
+
+# Default demo catalog. Edit these entries (or the keys) to match your bucket.
+# The `.pdf` files are expected to exist under DOCUQUERY_PREFIX in your bucket.
+#
+# For this deployment only the first entry is uploaded (see
+# scripts/make_sample_pdf.py --upload). Add the other documents to your bucket
+# before enabling their catalog entries.
+DEFAULT_CATALOG: List[CatalogEntry] = [
+    CatalogEntry(
+        title="AWS Solutions Architect Study Notes (personal)",
+        key="study-docs/saa-personal-notes.pdf",
+        description="Private exam-prep notes - not available to a generic model.",
+    ),
+]
+
+
+def catalog() -> List[CatalogEntry]:
+    """Return the active document catalog (allow-list)."""
+    return list(DEFAULT_CATALOG)
+
+
+def titles() -> List[str]:
+    """Human-friendly document titles for the UI selector and the model."""
+    return [e.title for e in catalog()]
+
+
+def key_for_title(title: str) -> str | None:
+    """Resolve a catalog title to its S3 key, or None if not permitted."""
+    for e in catalog():
+        if e.title == title:
+            return e.key
+    return None
+
+
+def is_permitted_key(key: str) -> bool:
+    """True only if `key` is one of the application-controlled catalog keys."""
+    return any(e.key == key for e in catalog())
