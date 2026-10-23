@@ -124,6 +124,11 @@ DEFAULT_CATALOG: List[CatalogEntry] = [
         key="study-docs/saa-personal-notes.pdf",
         description="Private exam-prep notes - not available to a generic model.",
     ),
+    CatalogEntry(
+        title="AWS SAA-C03 Handbook",
+        key="study-docs/aws-saa-handbook.pdf",
+        description="Solutions Architect Associate (SAA-C03) study handbook.",
+    ),
 ]
 
 
