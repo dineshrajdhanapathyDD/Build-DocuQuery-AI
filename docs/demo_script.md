@@ -62,6 +62,63 @@ same contrast outside the UI, and `pytest` showing the mocked tests pass.
 
 ---
 
+## Sample questions (matched to the uploaded PDF)
+
+The uploaded document `study-docs/saa-personal-notes.pdf` contains a personal
+mnemonic (page 1) and a personal "exam trap" note (page 2). The best demo
+questions are framed with **"my notes / my trick / my shorthand"** so the
+answer can only come from that PDF - that is what makes the before/after gap
+visible.
+
+### Hero question (use this for the main before/after)
+
+> According to my personal study notes, what is my memory trick for choosing
+> between S3 storage classes? Cite the page.
+
+- **Before:** admits it cannot access your private notes; gives generic storage
+  info only.
+- **After:** recites your exact mnemonic *"Students Idly Omit Gym On Fridays,
+  Generally"* with `[page 1]`, labeling document evidence vs general knowledge.
+
+### Backup: page-2 question (proves it reads the whole document)
+
+> In my notes, what is the "exam trap I keep failing" about S3 One Zone-IA?
+
+- **After:** One Zone-IA has **lower availability** because it lives in a single
+  AZ, cited from `[page 2]`.
+
+> What's my personal shorthand for durability vs availability?
+
+- **After:** *"Durability = will I lose it? Availability = can I reach it right
+  now?"* - clearly your phrasing, from `[page 2]`.
+
+### Baseline: general AWS question (both modes answer well)
+
+> What's the difference between S3 Standard-IA and S3 One Zone-IA?
+
+- **Both modes** answer this correctly from general knowledge. Use it to show
+  the agent is still a capable AWS tutor - the tool adds to it, nothing is lost.
+
+### Guardrail / honesty question (optional, powerful)
+
+> According to my notes, what does my professor say about DynamoDB capacity
+> modes?
+
+- **After:** the document has nothing about DynamoDB, so the agent says there is
+  not enough evidence in the document instead of inventing an answer.
+
+### Recommended 2-question flow for the video
+
+1. Ask the **baseline** general question in both modes -> "it already knows AWS."
+2. Ask the **hero** private-notes question in both modes -> "now it also knows
+   MY notes." That contrast is the whole story.
+
+> Tip: avoid questions whose answers are common AWS knowledge without a personal
+> framing (e.g. "What are the S3 storage classes?"). Both modes answer those, so
+> there is no visible before/after difference.
+
+---
+
 ## Pre-recording checklist
 
 - [ ] `.env` created from `.env.example` with a real `DOCUQUERY_BUCKET`.
